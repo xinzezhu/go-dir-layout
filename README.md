@@ -9,8 +9,14 @@
 - repository层: 所有的外部依赖调用都在这里，如外部的rpc调用、db调用，设计应该是无业务逻辑的，原子的调用。
 - entity层: 业务的实体、通用的方法、配置等。
 
-除了entity层外，每一层都是单项依赖的，即service层依赖logic层，logic层依赖repository层。
+## 依赖原则
+- ✅ 上层可以依赖下层
+- ❌ 下层不能依赖上层
+- ✅ Entity层不依赖任何层
+- ✅ 基础设施层（Repository）只能依赖Entity层
+  
+除了entity层外，每一层都是单项依赖的，即service层依赖logic层，logic层依赖repository层，entity层为所有层所依赖使用。
 
-entity层为所有层所依赖使用。
+# 具体分层介绍
 
-
+## service层，额外

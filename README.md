@@ -58,3 +58,76 @@
 |   |   -- mysql_impl.go
 |   |   -- rpc_impl.go
 ```
+
+每一个api.go文件都定义了这一层对外暴露的接口，如repo/confcenter/api.go文件：
+```go
+    type ConfCenter interface{
+        GetConf(path string) (interface{}, error)
+    }
+
+    func New() {
+        return newZKImpl()
+    }
+```
+
+
+repo/confcenter/zk_impl.go 实现了ConfCenter 这个接口
+```go
+    type zkImpl struct{
+        proxy zk.client
+    }
+
+    func (z *zkImpl)GetConf(path string) (interface{}, error) {
+        // 调用proxy去获取配置
+        return z.proxy.Get(path)
+    }
+
+    func newZKImpl() *zkImpl{
+        z := &zkImpl{
+            proxy: zk.New("xxx.xxx.xx.zk")
+        }
+
+        return z
+    }
+```
+
+如果后面想换成其他的组件作为配置中心，如改成redis作为配置中心，则应该新建文件repo/confcenter/redis_impl.go实现ConfCenter 这个接口
+```go
+    type redisImpl struct{
+        proxy redis.client
+    }
+
+    func (r *redisImpl)GetConf(path string) (interface{}, error) {
+        // 调用proxy去获取配置
+        return r.proxy.Get(path)
+    }
+
+    func newRedisImpl() *redisImpl{
+        r := &redisImpl{
+            proxy: redis.New("xxx.xxx.xx.redisImpl")
+        }
+
+        return r
+    }
+```
+
+上层应用完全感知不到下层内部实现的变化，上层调用方式如logic/business/business_impl.go中调用的逻辑应该是：
+```go
+    type businessImpl struct{
+        confCenter confcenter.ConfCenter
+    }
+
+    func (b *businessImpl)XXXX() (error) {
+        b.confCenter.GetPath("xxxx")
+
+        return nil
+    }
+
+    func newBusinessImpl() *businessImpl{
+        b := &businessImpl{
+            confCenter: confcenter.New()
+        }
+
+        return b
+    }
+```
